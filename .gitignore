@@ -1,0 +1,35 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Dependency directories
+vendor/
+tests/
+node_modules/
+
+# Composer
+composer.phar
+
+# Cache and temp files
+/cache/
+/tmp/
+/temp/
+
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output
+/build/
+/dist/
+
