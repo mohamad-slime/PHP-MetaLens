@@ -15,6 +15,8 @@ require_once 'MetaLens.php';
 $meta = new MetaLens('/path/to/image.jpg');
 $data = $meta->readMetadata();
 print_r($data);
+$getGPS = $meta->getGPS();
+print_r($getGPS);
 ```
 
 ## Testing
