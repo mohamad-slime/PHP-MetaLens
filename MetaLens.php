@@ -41,8 +41,24 @@ class MetaLens
      */
     private function validateImage()
     {
+        // Check if the file exists and is readable
         if (!file_exists($this->imagePath)) {
             throw new \InvalidArgumentException("Image file does not exist.");
+        }
+        if (!is_readable($this->imagePath)) {
+            throw new \InvalidArgumentException("Image file is not readable.");
+        }
+        // Check if the file is a valid image type  
+        // Using finfo to check the MIME type
+        // This is more reliable than just checking the file extension
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+
+        $mimeType = finfo_file($finfo, $this->imagePath);
+        finfo_close($finfo);
+
+
+        if (!in_array($mimeType, ['image/jpeg', 'image/tiff'])) {
+            return ["error" => "Unsupported image format: $mimeType. Try using JPG, JPEG, or TIFF.", "code" => 400];
         }
     }
 
@@ -57,7 +73,7 @@ class MetaLens
         $this->validateImage();
         $extension = strtolower(pathinfo($this->imagePath, PATHINFO_EXTENSION));
         if (!in_array($extension, ['jpg', 'jpeg', 'tiff'])) {
-            return ["error" => "Unsupported image format: '.$extension' try using JPG, JPEG, or TIFF.", "code" => 400];
+            return ["error" => "Unsupported image format: $extension. Try using JPG, JPEG, or TIFF.", "code" => 400];
         }
         $exif = exif_read_data($this->imagePath, 'ANY_TAG');
 
@@ -67,15 +83,41 @@ class MetaLens
         return ["error" => "Unable to read metadata", "code" => 500];
     }
 
-    /**
-     * Writes metadata to the image file (not implemented).
-     *
-     * @param array $metadata Metadata to write
-     * @return void
-     */
-    public function writeMetadata($metadata)
-    {
 
+    /**
+     * Gets the image dimensions.
+     *
+     * @return array|null Array with width and height or null if not available
+     */
+    public function getGPS()
+    {
+        $exif = $this->readMetadata();
+        if (isset($exif['GPSLatitude'], $exif['GPSLatitudeRef'], $exif['GPSLongitude'], $exif['GPSLongitudeRef'])) {
+            $lat = $this->convertGPS($exif['GPSLatitude'], $exif['GPSLatitudeRef']);
+            $lon = $this->convertGPS($exif['GPSLongitude'], $exif['GPSLongitudeRef']);
+            return ['latitude' => $lat, 'longitude' => $lon];
+        }
+    }
+
+
+    /**
+     * Converts GPS coordinates from EXIF format to decimal degrees.
+     *
+     * @param string $gps GPS coordinate in EXIF format
+     * @param string $ref Reference (N/S or E/W)
+     * @return float Converted GPS coordinate in decimal degrees
+     */
+    private function convertGPS($gps, $ref)
+    {
+        $gps = explode('/', $gps);
+        $deg = $gps[0] / $gps[1];
+        $gps = explode('/', $gps[2]);
+        $min = $gps[0] / $gps[1];
+        $gps = explode('/', $gps[2]);
+        $sec = $gps[0] / $gps[1];
+        $result = $deg + ($min / 60) + ($sec / 3600);
+
+        return ($ref == 'S' || $ref == 'W') ? $result * -1 : $result;
     }
 
     /**
