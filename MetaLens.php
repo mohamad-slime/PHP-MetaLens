@@ -97,6 +97,7 @@ class MetaLens
             $lon = $this->convertGPS($exif['GPSLongitude'], $exif['GPSLongitudeRef']);
             return ['latitude' => $lat, 'longitude' => $lon];
         }
+        return null; // No GPS data available
     }
 
 

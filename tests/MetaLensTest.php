@@ -25,6 +25,7 @@ class MetaLensTest extends TestCase
 
     public function testAcceptsFilesArray()
     {
+
         $fakeFile = [
             'tmp_name' => $this->testImagePath
         ];
@@ -50,6 +51,25 @@ class MetaLensTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $meta = new MetaLens('nonexistent.jpg');
         $meta->readMetadata(); // triggers validateImage
+    }
+
+
+
+   
+
+    public function testGetGPSDataReturnsArray()
+    {
+        $meta = new MetaLens($this->testImagePath);
+        $data = $meta->getGPS();
+
+        $this->assertIsArray($data);
+    }
+    public function testGetGPSDataReturnsNullIfNoGPS()
+    {
+        $meta = new MetaLens($this->testImagePath);
+        $data = $meta->getGPS();
+
+        $this->assertNull($data);
     }
 
     public function testReadMetadataReturnsArray()
